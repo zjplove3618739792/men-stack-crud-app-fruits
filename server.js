@@ -3,15 +3,14 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const express = require("express");
-const mongoose = require("mongoose");
-
-
-
-
-
-// server.js
-
 const app = express();
+const mongoose = require('mongoose');
+const methodOverride = require("method-override"); // new
+const morgan = require("morgan"); 
+
+
+
+
 
 mongoose.connect(process.env.MONGODB_URI);
 // log connection status to terminal on start
@@ -23,6 +22,8 @@ mongoose.connection.on("connected", () => {
 
 const Fruit = require("./models/fruit.js");
 app.use(express.urlencoded({ extended: false }));
+app.use(methodOverride("_method")); // new
+app.use(morgan("dev")); //new
 
 
 
@@ -40,8 +41,16 @@ app.get("/fruits/new", (req, res) => {
 });
 
 
-app.get("/fruits", (req, res) => {
-  res.send("Welcome to the index page!");
+app.get("/fruits/:fruitId", async (req, res) => {
+  const foundFruit = await Fruit.findById(req.params.fruitId);
+  res.render("fruits/show.ejs", { fruit: foundFruit });
+});
+
+
+
+app.get("/fruits", async (req, res) => {
+  const allFruits = await Fruit.find();
+  res.render("fruits/index.ejs", { fruits: allFruits });
 });
 
 
@@ -54,11 +63,17 @@ app.post("/fruits", async (req, res) => {
     req.body.isReadyToEat = false;
   }
   await Fruit.create(req.body);
-  res.redirect("/fruits/new");
+  res.redirect("/fruits"); 
 });
 
 
 
+
+
+app.delete("/fruits/:fruitId", async (req, res) => {
+  await Fruit.findByIdAndDelete(req.params.fruitId);
+  res.redirect("/fruits");
+});
 
 
 app.listen(3000, () => {
