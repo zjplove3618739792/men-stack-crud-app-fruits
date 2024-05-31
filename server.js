@@ -22,6 +22,9 @@ mongoose.connection.on("connected", () => {
 
 
 const Fruit = require("./models/fruit.js");
+app.use(express.urlencoded({ extended: false }));
+
+
 
 
 
@@ -30,6 +33,32 @@ const Fruit = require("./models/fruit.js");
 app.get("/", async (req, res) => {
   res.render('index.ejs');
 });
+
+
+app.get("/fruits/new", (req, res) => {
+  res.render("fruits/new.ejs");
+});
+
+
+app.get("/fruits", (req, res) => {
+  res.send("Welcome to the index page!");
+});
+
+
+
+
+app.post("/fruits", async (req, res) => {
+  if (req.body.isReadyToEat === "on") {
+    req.body.isReadyToEat = true;
+  } else {
+    req.body.isReadyToEat = false;
+  }
+  await Fruit.create(req.body);
+  res.redirect("/fruits/new");
+});
+
+
+
 
 
 app.listen(3000, () => {
